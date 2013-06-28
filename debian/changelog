@@ -1,3 +1,10 @@
+clustoclient (0.3.2) unstable; urgency=low
+
+  * Make url and auth parameters to ClustoProxy (still pulls from environment
+    if they aren't present)
+
+ -- James Brown <jbrown@uber.com>  Fri, 28 Jun 2013 11:53:36 -0700
+
 clustoclient (0.3.1) unstable; urgency=low
 
   * Add logging and allow using the set() constructor inside templates
