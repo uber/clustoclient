@@ -14,11 +14,14 @@ log = logging.getLogger('clusto-template')
 def serversort(servers):
     return list(sorted(servers, key=lambda x: (x.datacenter, x.name)))
 
+
 def clusto_entity_paths_to_names(es):
     return [e.split("/")[-1] for e in es]
 
+
 def get_attribute_l(es, attr):
     return [getattr(e, attr) for e in es]
+
 
 def do_template(template, outputfile, template_root, name):
     tenv = jinja2.Environment(trim_blocks=True,
@@ -37,7 +40,7 @@ def do_template(template, outputfile, template_root, name):
     except jinja2.TemplateNotFound:
         raise ValueError('Unable to find template %s under root %s', template, template_root)
 
-    output = template.render(server=server, clusto=clusto, set=set)
+    output = template.render(server=server, clusto=clusto, set=set, clusto_entity_paths_to_names=clusto_entity_paths_to_names, sorted=sorted, int=int)
 
     if outputfile == '-':
         sys.stdout.write(output)
