@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import argparse
+
+import clustohttp
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-t', '--clusto-type', action='append', default=[], choices=('server', 'datacenter', 'pool'))
+    parser.add_argument('pools', nargs='+', help='Pools to select from')
+    args = parser.parse_args()
+
+    proxy = clustohttp.ClustoProxy()
+    kwargs = {}
+    if args.clusto_type:
+        kwargs['clusto_types'] = args.clusto_type
+    hosts = proxy.get_from_pools(args.pools)
+    print '\n'.join(sorted(h.name for h in hosts))
+
+
+if __name__ == '__main__':
+    main()
