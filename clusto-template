@@ -38,8 +38,11 @@ def do_template(template, outputfile, template_root, name):
 
     clusto = clustohttp.ClustoProxy()
 
-    server = clusto.get_by_name(name)
-    log.debug('Templating for server %s with role %s', server, server.role)
+    if name is None:
+        server = None
+    else:
+        server = clusto.get_by_name(name)
+        log.debug('Templating for server %s with role %s', server, server.role)
 
     try:
         template = tenv.get_template(template)
@@ -80,6 +83,8 @@ def main():
         default=socket.gethostname().split('.', 1)[0],
         help='Name of the clusto object to query attributes from. Default ' +
              'is this system\'s hostname without a domain part')
+    parser.add_option('-N', '--no-name', dest='no_name', action='store_true',
+        help='Template without a name (template may NOT reference the {{server}} global')
     parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
         help='Writes status messages and a diff to stderr if the output ' +
              'file differs from the existing file on disk')
@@ -97,7 +102,7 @@ def main():
     template, outputfile = args[:2]
 
     try:
-        return do_template(template, outputfile, options.template_root, options.name)
+        return do_template(template, outputfile, options.template_root, None if options.no_name else options.name)
     except Exception:
         logging.exception('Failed to template')
         return 1
