@@ -29,7 +29,8 @@ def colorhash(string):
 
 
 def do_template(template, outputfile, template_root, name):
-    tenv = jinja2.Environment(trim_blocks=True,
+    tenv = jinja2.Environment(
+        trim_blocks=True,
         loader=jinja2.FileSystemLoader(template_root))
     tenv.filters['serversort'] = serversort
     tenv.filters['get_attribute_l'] = get_attribute_l
@@ -47,9 +48,16 @@ def do_template(template, outputfile, template_root, name):
     try:
         template = tenv.get_template(template)
     except jinja2.TemplateNotFound:
-        raise ValueError('Unable to find template %s under root %s', template, template_root)
+        raise ValueError('Unable to find template %s under root %s', template,
+                         template_root)
 
-    output = template.render(server=server, clusto=clusto, set=set, clusto_entity_paths_to_names=clusto_entity_paths_to_names, sorted=sorted, int=int)
+    output = template.render(
+        server=server,
+        clusto=clusto,
+        set=set,
+        clusto_entity_paths_to_names=clusto_entity_paths_to_names,
+        sorted=sorted,
+        int=int)
 
     if outputfile == '-':
         sys.stdout.write(output)
@@ -58,7 +66,8 @@ def do_template(template, outputfile, template_root, name):
             with open(outputfile, 'r') as f:
                 existing = f.read()
             if existing == output:
-                log.info('Rendered template matches output file, not overwriting.')
+                log.info(
+                    'Rendered template matches output file, not overwriting.')
                 return 0
         except Exception:
             log.warning('Unable to read target file, assuming empty')
@@ -76,18 +85,23 @@ def do_template(template, outputfile, template_root, name):
 def main():
     parser = optparse.OptionParser(
         usage='%prog [options] <template> <output file>')
-    parser.add_option('-r', '--root', dest='template_root',
+    parser.add_option(
+        '-r', '--root', dest='template_root',
         default='/usr/share/python-clustoclient/templates',
         help='Absolute path to template directory')
-    parser.add_option('-n', '--name', dest='name',
+    parser.add_option(
+        '-n', '--name', dest='name',
         default=socket.gethostname().split('.', 1)[0],
         help='Name of the clusto object to query attributes from. Default ' +
-             'is this system\'s hostname without a domain part')
-    parser.add_option('-N', '--no-name', dest='no_name', action='store_true',
-        help='Template without a name (template may NOT reference the {{server}} global')
-    parser.add_option('-v', '--verbose', dest='verbose', action='store_true',
+        'is this system\'s hostname without a domain part')
+    parser.add_option(
+        '-N', '--no-name', dest='no_name', action='store_true',
+        help='Template without a name (template may NOT reference the ' +
+        '{{server}} global')
+    parser.add_option(
+        '-v', '--verbose', dest='verbose', action='store_true',
         help='Writes status messages and a diff to stderr if the output ' +
-             'file differs from the existing file on disk')
+        'file differs from the existing file on disk')
     options, args = parser.parse_args()
 
     handler = logging.StreamHandler()
@@ -102,7 +116,10 @@ def main():
     template, outputfile = args[:2]
 
     try:
-        return do_template(template, outputfile, options.template_root, None if options.no_name else options.name)
+        return do_template(template,
+                           outputfile,
+                           options.template_root,
+                           None if options.no_name else options.name)
     except Exception:
         logging.exception('Failed to template')
         return 1
