@@ -8,6 +8,7 @@ import clustohttp
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--clusto-type', action='append', default=[], choices=('server', 'datacenter', 'pool'))
+    parser.add_argument('-i', '--ip', action='store_true', help='Return IPs instead of names')
     parser.add_argument('pools', nargs='+', help='Pools to select from')
     args = parser.parse_args()
 
@@ -15,8 +16,12 @@ def main():
     kwargs = {}
     if args.clusto_type:
         kwargs['clusto_types'] = args.clusto_type
-    hosts = proxy.get_from_pools(args.pools)
-    print '\n'.join(sorted(h.name for h in hosts))
+
+    for host in sorted(proxy.get_from_pools(args.pools)):
+        if args.ip:
+            print host.private_ip
+        else:
+            print host.name
 
 
 if __name__ == '__main__':
