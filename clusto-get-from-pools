@@ -6,6 +6,16 @@ import clustohttp
 from IPy import IP
 
 
+def get_valid_ips(host, excluded):
+    ips = host.attr_values(key='ip', subkey='ipstring')
+    ips = [IP(x) for x in ips]
+    for subnet in excluded:
+        for ip in ips:
+            if not ip in subnet:
+                yield ip
+    return
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--clusto-type', action='append', default=[], choices=('server', 'datacenter', 'pool'))
@@ -23,8 +33,7 @@ def main():
 
     for host in sorted(proxy.get_from_pools(args.pools)):
         if args.ip:
-            ips = [IP(x) for x in host.attr_values(key='ip', subkey='ipstring')]
-            ips = [str(x) for x in ips if x.iptype() == 'PRIVATE' and not x in excluded_subnets]
+            ips = list(get_valid_ips(host, excluded_subnets))
             if ips:
                 print ips[0]
         else:
