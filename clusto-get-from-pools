@@ -19,7 +19,7 @@ def main():
     if args.clusto_type:
         kwargs['clusto_types'] = args.clusto_type
 
-    excluded_subnets = [IP(x) for x in parser.exclude]
+    excluded_subnets = [IP(x) for x in args.exclude]
 
     for host in sorted(proxy.get_from_pools(args.pools)):
         if args.ip:
