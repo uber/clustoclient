@@ -98,6 +98,21 @@ class ClustoProxy(object):
             raise Exception(response)
         return EntityProxy(self, json.loads(response))
 
+    def create_pool(self, pool):
+        '''
+        Creates a pool
+
+        Requires "pool" as pool name
+        Returns EntityProxy object for the pool
+        '''
+        path = '/pool/' + pool
+        status, headers, response = self.request('POST', path)
+        # expect 201 Created, not 200 OK
+        if status != 201:
+            raise Exception(response)
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
+
     def __repr__(self):
         return 'ClustoProxy(%s)' % self.url
 
@@ -139,6 +154,38 @@ class EntityProxy(object):
         status, headers, response = self.request('DELETE', '')
         if status != 200:
             raise Exception(response)
+
+    def insert(self, object):
+        '''
+        Inserts an object into pool
+
+        Requires parameter "object"
+        the object needs to be a valid clusto object such as /pool or /server etc
+        Returns the pool that object belongs to
+        '''
+        path = "insert?" + "object=" + object
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+
+        obj = json.loads(response)
+
+        return EntityProxy(self, obj['object'], obj)
+
+    def remove(self, object):
+        '''
+        Removes given object from this pool
+
+        Requires parameter "object"
+        the object needs to be a valid clusto object such as /pool or /server etc
+        Returns the pool that object used to belong
+        '''
+        path = "remove?" + "object=" + object
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
 
     @property
     def type(self):
@@ -208,6 +255,60 @@ class EntityProxy(object):
         if not a:
             return None
         return a[0]['value']
+
+    def add_attr(self, key, subkey, value, datatype=None):
+        '''
+        Adds an attribute to this object
+
+        Requires parameters "key", "subkey" and "value"
+        Optional "datatype" could be 'int' or 'relation' or defaults None to string
+        Returns EntityProxy of the object the attribute added
+        '''
+        path = "addattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
+        if datatype:
+            path += "&datatype=" + datatype
+
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
+
+    def set_attr(self, key, subkey, value, datatype=None):
+        '''
+        Sets an attribute of this object
+
+        Requires parameters "key", "subkey" and "value"
+        Optional "datatype" could be 'int' or 'relation' or defaults None to string
+        Returns EntityProxy of the object the attribute set
+        '''
+        path = "setattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
+        if datatype:
+            path += "&datatype=" + datatype
+
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
+
+    def del_attr(self, key):
+        '''
+        Deletes a set of attributes with given key
+
+        Requires parameters "key"
+        Returns EntityProxy of the pool whose attributes removed
+        '''
+        path = "delattr?" + "key=" + key
+
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
 
     def set_port_attr(self, porttype, portnum, key, value):
         return self.__getattr__('set_port_attr')(porttype=porttype, portnum=portnum, key=key, value=value)
