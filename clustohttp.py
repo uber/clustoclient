@@ -28,6 +28,11 @@ class ClustoProxy(object):
             auth = os.environ.get('CLUSTO_AUTH', None)
         self.auth = auth
 
+        if url.startswith('https://'):
+            self.ssl = True
+        else:
+            self.ssl = False
+
     def request(self, method, path, body='', headers={}):
         if path.startswith('/'):
             url = self.url + path
@@ -37,12 +42,18 @@ class ClustoProxy(object):
         start = time()
         if not isinstance(body, basestring):
             body = urlencode(body)
-        url = urlsplit(url, 'http')
+
+        if self.ssl:
+            url = urlsplit(url, 'https')
+            connector = httplib.HTTPSConnection
+        else:
+            url = urlsplit(url, 'http')
+            connector = httplib.HTTPConnection
 
         if self.auth:
             headers['Authorization'] = 'Basic %s' % self.auth.encode('base64')
 
-        conn = httplib.HTTPConnection(url.hostname, url.port)
+        conn = connector(url.hostname, url.port)
         if url.query:
             query = '%s?%s' % (url.path, url.query)
         else:
