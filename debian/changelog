@@ -3,7 +3,7 @@ clustoclient (0.3.3) unstable; urgency=low
   * Support HTTPS endpoint by HTTPSConnection
   * Support for modifying 'number' of attribute
 
- -- Jameson Lee <jameson@uber.com>  Fri, Apr 17 2015 14:12:45 -0700
+ -- Jameson Lee <jameson@uber.com>  Fri, 17 Apr 2015 14:12:45 -0700
 
 clustoclient (0.3.2) unstable; urgency=low
 
