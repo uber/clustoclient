@@ -273,7 +273,7 @@ class EntityProxy(object):
             return None
         return a[0]['value']
 
-    def add_attr(self, key, subkey, value, datatype=None):
+    def add_attr(self, key, subkey, value, datatype=None, number=None):
         '''
         Adds an attribute to this object
 
@@ -284,6 +284,8 @@ class EntityProxy(object):
         path = "addattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
         if datatype:
             path += "&datatype=" + datatype
+        if number:
+            path += "&number={}".format(number)
 
         status, headers, response = self.request('GET', path)
         if status != 200:
@@ -292,7 +294,7 @@ class EntityProxy(object):
         obj = json.loads(response)
         return EntityProxy(self, obj['object'], obj)
 
-    def set_attr(self, key, subkey, value, datatype=None):
+    def set_attr(self, key, subkey, value, datatype=None, number=None):
         '''
         Sets an attribute of this object
 
@@ -303,6 +305,8 @@ class EntityProxy(object):
         path = "setattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
         if datatype:
             path += "&datatype=" + datatype
+        if number:
+            path += "&number={}".format(number)
 
         status, headers, response = self.request('GET', path)
         if status != 200:
