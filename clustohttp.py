@@ -294,6 +294,18 @@ class EntityProxy(object):
         obj = json.loads(response)
         return EntityProxy(self, obj['object'], obj)
 
+    def rename(self, newname):
+        '''
+        Path Example: /server/exampleserver/rename?object=/server/newname
+        '''
+        path = "rename?object=/{}/{}".format(self.type, newname)
+        status, headers, response = self.request('GET', path)
+        if status != 200:
+            raise Exception(response)
+
+        obj = json.loads(response)
+        return EntityProxy(self, obj['object'], obj)
+
     def set_attr(self, key, subkey, value, datatype=None, number=None):
         '''
         Sets an attribute of this object
