@@ -327,7 +327,7 @@ class EntityProxy(object):
         obj = json.loads(response)
         return EntityProxy(self, obj['object'], obj)
 
-    def del_attr(self, key):
+    def del_attr(self, key, subkey=None, value=None, number=None):
         '''
         Deletes a set of attributes with given key
 
@@ -335,6 +335,12 @@ class EntityProxy(object):
         Returns EntityProxy of the pool whose attributes removed
         '''
         path = "delattr?" + "key=" + key
+        if subkey:
+            path += "&subkey=" + subkey
+        if value:
+            path += "&value=" + value
+        if number:
+            path += "&number=" + number
 
         status, headers, response = self.request('GET', path)
         if status != 200:
