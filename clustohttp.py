@@ -331,16 +331,18 @@ class EntityProxy(object):
         '''
         Deletes a set of attributes with given key
 
+        Does not support deleting attributes with values as Pools and other relations
+
         Requires parameters "key"
         Returns EntityProxy of the pool whose attributes removed
         '''
-        path = "delattr?" + "key=" + key
+        path = "delattr?" + "key=" + urlencode(key)
         if subkey:
-            path += "&subkey=" + subkey
+            path += "&subkey=" + urlencode(subkey)
         if value:
-            path += "&value=" + value
+            path += "&value=" + urlencode(value)
         if number:
-            path += "&number=" + number
+            path += "&number=" + urlencode(number)
 
         status, headers, response = self.request('GET', path)
         if status != 200:
