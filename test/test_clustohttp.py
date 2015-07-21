@@ -185,10 +185,10 @@ class ClustoProxyTestCase(unittest.TestCase):
 class EntityProxyAttributeTestCase(unittest.TestCase):
     def setUp(self):
         application.reset_all()
+        self.clusto = get_mock_clusto()
 
     def test_basic_set_attr(self):
-        c = get_mock_clusto()
-        obj = c.get_by_name('server02')
+        obj = self.clusto.get_by_name('server02')
         obj = obj.add_attr('foo', 'bar', 'baz')
         new_attr = obj.attrs()[0]
         self.assertEqual(len(obj.attrs()), 1)
@@ -204,8 +204,7 @@ class EntityProxyAttributeTestCase(unittest.TestCase):
         self.assertEqual(new_attr['value'], 'garply')
 
     def test_add_attr_zeroes(self):
-        c = get_mock_clusto()
-        obj = c.get_by_name('server02')
+        obj = self.clusto.get_by_name('server02')
         obj = obj.add_attr('foo', 'bar', 'baz', number=0)
         self.assertEqual(len(obj.attrs()), 1)
         new_attr = obj.attrs()[0]
