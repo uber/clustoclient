@@ -1,4 +1,5 @@
 import clustohttp
+import copy
 import json
 import mock
 import os
@@ -7,7 +8,7 @@ import urlparse
 
 
 BASIC_CLUSTO = {
-    'servers': {
+    'server': {
         'server01': {
             'attrs': [
                 {
@@ -18,20 +19,25 @@ BASIC_CLUSTO = {
                     "value": 1
                 },
             ]
-        }
+        },
+        'server02': {
+            'attrs': []
+        },
     }
 }
 
 
 class MockClustoApp(object):
     def __init__(self, topology=BASIC_CLUSTO):
-        self.topology = topology
+        self.original_topology = topology
+        self.topology = copy.deepcopy(self.original_topology)
         self.urls = {
             ('GET', '/query/get_by_name'): self.get_by_name,
             ('GET', '/query/get'): self.get,
             ('GET', '/query/get_entities'): self.get_entities,
             ('GET', '/server'): self.get_all,
-            ('GET', '/servers/server01/addattr'): self.addattr,
+            ('GET', '/server/server02/addattr'): self.addattr,
+            ('GET', '/server/server02/setattr'): self.setattr,
         }
 
     def serialize_clusto_object(self, name, clusto_type, obj_dict):
@@ -47,32 +53,38 @@ class MockClustoApp(object):
         })
 
     def get_all(self, method, path, body, headers, query_params):
-        # TODO: Return a response based on self.topology
-        return 200, {}, '[]'
+        clusto_type = path.split('/')[1]
+        all_objects = self.topology[clusto_type].keys()
+        return 200, {}, json.dumps(['/%s/%s' % (clusto_type, name)
+                                    for name in all_objects])
 
     def get_by_name(self, method, path, body, headers, query_params):
         name = query_params['name'][0]
         for clusto_type, clusto_objects in self.topology.items():
             if name in clusto_objects:
-
                 return 200, {}, self.serialize_clusto_object(name, clusto_type,
                                                              clusto_objects[name])
         return 500, {}, 'OBJECT NOT FOUND'
 
     def get(self, method, path, body, headers, query_params):
-        # TODO: Return a response based on self.topology
         name = query_params['name'][0]
-        return 200, {}, '[{"object": "/server/%s" }]' % name
+        for clusto_type, clusto_objects in self.topology.items():
+            if name in clusto_objects:
+                response = self.serialize_clusto_object(name, clusto_type,
+                                                        clusto_objects[name])
+                response = "[" + response + "]"
+                return 200, {}, response
+        return 404, {}, '404 Not Found'
 
     def get_entities(self, method, path, body, headers, query_params):
         # TODO: Return a response based on self.topology
         return 200, {}, '[]'
 
-    def addattr(self, method, path, body, headers, query_params):
+    def _attr_from_params(self, params):
         new_attr = {}
         for k in ('key', 'subkey', 'value', 'datatype', 'number'):
-            if k in query_params:
-                new_attr[k] = query_params[k][0]
+            if k in params:
+                new_attr[k] = params[k][0]
                 if k == 'number':
                     new_attr[k] = int(new_attr[k])
             else:
@@ -80,10 +92,25 @@ class MockClustoApp(object):
                     new_attr[k] = 'string'
                 else:
                     new_attr[k] = None
+        return new_attr
 
-        self.topology['servers']['server01']['attrs'].append(new_attr)
+    def addattr(self, method, path, body, headers, query_params):
+        servername = path.split('/')[2]
+        new_attr = self._attr_from_params(query_params)
+        self.topology['server'][servername]['attrs'].append(new_attr)
         return 200, {}, self.serialize_clusto_object(
-            'server01', 'server', self.topology['servers']['server01'])
+            servername, 'server', self.topology['server'][servername])
+
+    def setattr(self, method, path, body, headers, query_params):
+        servername = path.split('/')[2]
+        new_attr = self._attr_from_params(query_params)
+
+        for attr in self.topology['server'][servername]['attrs']:
+            if attr['key'] == new_attr['key'] and attr['subkey'] == \
+                    new_attr['subkey']:
+                attr['value'] = new_attr['value']
+        return 200, {}, self.serialize_clusto_object(
+            servername, 'server', self.topology['server'][servername])
 
     def __call__(self, method, path, body='', headers=None):
         if headers is None:
@@ -97,6 +124,10 @@ class MockClustoApp(object):
                 return handler(method, path, body, headers, query_params)
 
         raise NotImplementedError('No action for %s %s' % (method, path))
+
+    def reset_all(self):
+        self.topology = copy.deepcopy(self.original_topology)
+
 
 application = MockClustoApp()
 
@@ -112,6 +143,9 @@ def get_mock_clusto(url='https://mock-clusto'):
 
 
 class ClustoProxyTestCase(unittest.TestCase):
+    def setUp(self):
+        self.clusto = get_mock_clusto()
+
     def test_environment_init(self):
         os.environ['CLUSTO_URL'] = 'http://testval'
         c = get_mock_clusto(url=None)
@@ -123,32 +157,46 @@ class ClustoProxyTestCase(unittest.TestCase):
             get_mock_clusto(url=None)
 
     def test_request(self):
-        c = get_mock_clusto()
-        c.get_by_name('server01')
+        self.clusto.get_by_name('server01')
 
     def test_basic_get(self):
-        c = get_mock_clusto()
-        c.get('server01')
+        self.clusto.get('server01')
 
     def test_basic_get_all(self):
-        c = get_mock_clusto()
-        c.get_all(resource_type='server')
+        self.clusto.get_all(resource_type='server')
 
     def test_basic_get_entities(self):
+        self.clusto.get_entities()
+
+
+class EntityProxyAttributeTestCase(unittest.TestCase):
+    def setUp(self):
+        application.reset_all()
+
+    def test_basic_set_attr(self):
         c = get_mock_clusto()
-        c.get_entities()
+        obj = c.get_by_name('server02')
+        obj = obj.add_attr('foo', 'bar', 'baz')
+        new_attr = obj.attrs()[0]
+        self.assertEqual(len(obj.attrs()), 1)
+        self.assertEqual(new_attr['key'], 'foo')
+        self.assertEqual(new_attr['subkey'], 'bar')
+        self.assertEqual(new_attr['value'], 'baz')
 
+        obj = obj.set_attr('foo', 'bar', 'garply')
+        new_attr = obj.attrs()[0]
+        self.assertEqual(len(obj.attrs()), 1)
+        self.assertEqual(new_attr['key'], 'foo')
+        self.assertEqual(new_attr['subkey'], 'bar')
+        self.assertEqual(new_attr['value'], 'garply')
 
-class EntityProxyTestCase(unittest.TestCase):
     def test_add_attr_zeroes(self):
         c = get_mock_clusto()
-        obj = c.get_by_name('server01')
-        obj = obj.add_attr('newkey', 'newsubkey', 'newvalue', number=0)
-        found = False
-        for attr in obj.attrs():
-            if attr['key'] == 'newkey' and attr['subkey'] == 'newsubkey' and \
-                    attr['value'] == 'newvalue' and attr['number'] == 0:
-                found = True
-        self.assertEqual(found, True,
-                         'No attr with key=newkey, subkey=newsubkey, '
-                         'value=newvalue, number=0')
+        obj = c.get_by_name('server02')
+        obj = obj.add_attr('foo', 'bar', 'baz', number=0)
+        self.assertEqual(len(obj.attrs()), 1)
+        new_attr = obj.attrs()[0]
+        self.assertEqual(new_attr['key'], 'foo')
+        self.assertEqual(new_attr['subkey'], 'bar')
+        self.assertEqual(new_attr['value'], 'baz')
+        self.assertEqual(new_attr['number'], 0)
