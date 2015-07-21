@@ -336,13 +336,13 @@ class EntityProxy(object):
         Requires parameters "key"
         Returns EntityProxy of the pool whose attributes removed
         '''
-        path = "delattr?" + "key=" + urlencode(key)
+        path = "delattr?" + "key=" + quote(key)
         if subkey:
-            path += "&subkey=" + urlencode(subkey)
+            path += "&subkey=" + quote(subkey)
         if value:
-            path += "&value=" + urlencode(value)
+            path += "&value=" + quote(value)
         if number:
-            path += "&number=" + urlencode(number)
+            path += "&number=" + quote(number)
 
         status, headers, response = self.request('GET', path)
         if status != 200:
