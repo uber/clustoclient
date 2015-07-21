@@ -2,6 +2,17 @@
 
 clustohttp (the core of the client libraries) emulates the Clusto API to a limited extent with an instance of the ClustoProxy class. You must tell the ClustoProxy where you're running clusto-httpd by either passing the url argument to it's constructor, or by setting the `CLUSTO_URL` and optionally the `CLUSTO_AUTH` environment variables. `CLUSTO_URL` should be in the form `http://clusto.example.com` with no trailing slash. `CLUSTO_AUTH` should be a `username:password` if your API requires HTTP Basic authentication.
 
+# Running tests
+Run tests as follows:
+
+```
+virtualenv env
+source env/bin/activate
+pip install -r requirements-test.txt
+py.test --cov clustohttp.py --cov-report term test
+```
+
+
 ## Example redis templating
 
 redis.conf.template:
@@ -33,3 +44,5 @@ export CLUSTO_URL=http://clusto.example.com
 export CLUSTO_AUTH=username:password
 clusto-template -r . redis.conf.template /etc/redis.conf
 ```
+
+
