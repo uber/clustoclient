@@ -282,9 +282,9 @@ class EntityProxy(object):
         Returns EntityProxy of the object the attribute added
         '''
         path = "addattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
-        if datatype:
+        if datatype is not None:
             path += "&datatype=" + datatype
-        if number:
+        if number is not None:
             path += "&number={}".format(number)
 
         status, headers, response = self.request('GET', path)
@@ -315,9 +315,9 @@ class EntityProxy(object):
         Returns EntityProxy of the object the attribute set
         '''
         path = "setattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
-        if datatype:
+        if datatype is not None:
             path += "&datatype=" + datatype
-        if number:
+        if number is not None:
             path += "&number={}".format(number)
 
         status, headers, response = self.request('GET', path)
