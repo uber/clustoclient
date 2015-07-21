@@ -1,10 +1,11 @@
-import clustohttp
 import copy
 import json
 import mock
 import os
 import unittest
 import urlparse
+
+import clustohttp
 
 
 BASIC_CLUSTO = {
@@ -77,16 +78,21 @@ class MockClustoApp(object):
         return 404, {}, '404 Not Found'
 
     def get_entities(self, method, path, body, headers, query_params):
-        # TODO: Return a response based on self.topology
         return 200, {}, '[]'
 
     def _attr_from_params(self, params):
+        """ Takes a query string params dictionary from urlparse.parse_qs and
+        returns the python dictionary representation of an attribute.
+        """
         new_attr = {}
         for k in ('key', 'subkey', 'value', 'datatype', 'number'):
             if k in params:
-                new_attr[k] = params[k][0]
-                if k == 'number':
-                    new_attr[k] = int(new_attr[k])
+                if type(params[k]) is list and len(params[k]) != 0:
+                    new_attr[k] = params[k][0]
+                    # number should be an integer type, but it is passed in as
+                    # a string, so cast
+                    if k == 'number':
+                        new_attr[k] = int(new_attr[k])
             else:
                 if k == 'datatype':
                     new_attr[k] = 'string'
@@ -157,16 +163,23 @@ class ClustoProxyTestCase(unittest.TestCase):
             get_mock_clusto(url=None)
 
     def test_request(self):
-        self.clusto.get_by_name('server01')
+        result = self.clusto.get_by_name('server01')
+        self.assertIs(type(result), clustohttp.EntityProxy)
+        self.assertEqual(result.type, 'server')
+        self.assertEqual(len(result.attrs()), 1)
 
     def test_basic_get(self):
-        self.clusto.get('server01')
+        result = self.clusto.get('server01')
+        self.assertIs(type(result), list)
+        self.assertEqual(len(result), 1)
 
     def test_basic_get_all(self):
-        self.clusto.get_all(resource_type='server')
+        result = self.clusto.get_all(resource_type='server')
+        self.assertEqual(len(result), 2)
 
     def test_basic_get_entities(self):
-        self.clusto.get_entities()
+        result = self.clusto.get_entities()
+        self.assertEqual(len(result), 0)
 
 
 class EntityProxyAttributeTestCase(unittest.TestCase):
