@@ -281,7 +281,9 @@ class EntityProxy(object):
         Optional "datatype" could be 'int' or 'relation' or defaults None to string
         Returns EntityProxy of the object the attribute added
         '''
-        path = "addattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
+        path = "addattr?" + "key=" + key + "&value=" + value
+        if subkey is not None:
+            path += '&subkey=' + subkey
         if datatype is not None:
             path += "&datatype=" + datatype
         if number is not None:
@@ -310,11 +312,13 @@ class EntityProxy(object):
         '''
         Sets an attribute of this object
 
-        Requires parameters "key", "subkey" and "value"
+        Requires parameters "key", "subkey", and "value"
         Optional "datatype" could be 'int' or 'relation' or defaults None to string
         Returns EntityProxy of the object the attribute set
         '''
-        path = "setattr?" + "key=" + key + "&subkey=" + subkey + "&value=" + value
+        path = "setattr?" + "key=" + key + "&value=" + value
+        if subkey is not None:
+            path += "&subkey=" + subkey
         if datatype is not None:
             path += "&datatype=" + datatype
         if number is not None:

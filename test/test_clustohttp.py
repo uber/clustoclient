@@ -187,6 +187,25 @@ class EntityProxyAttributeTestCase(unittest.TestCase):
         application.reset_all()
         self.clusto = get_mock_clusto()
 
+    def test_add_attr_none_subkey(self):
+        obj = self.clusto.get_by_name('server02')
+        obj = obj.add_attr('foo', None, 'baz')
+        new_attr = obj.attrs()[0]
+        self.assertEqual(len(obj.attrs()), 1)
+        self.assertEqual(new_attr['key'], 'foo')
+        self.assertEqual(new_attr['subkey'], None)
+        self.assertEqual(new_attr['value'], 'baz')
+
+    def test_set_attr_none_subkey(self):
+        obj = self.clusto.get_by_name('server02')
+        obj = obj.add_attr('foo', None, 'baz')
+        obj = obj.set_attr('foo', None, 'garply')
+        new_attr = obj.attrs()[0]
+        self.assertEqual(len(obj.attrs()), 1)
+        self.assertEqual(new_attr['key'], 'foo')
+        self.assertEqual(new_attr['subkey'], None)
+        self.assertEqual(new_attr['value'], 'garply')
+
     def test_basic_set_attr(self):
         obj = self.clusto.get_by_name('server02')
         obj = obj.add_attr('foo', 'bar', 'baz')
