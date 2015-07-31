@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='clustoclient',
-      version='0.3.3',
+      version='0.3.4',
       py_modules=['clustohttp'],
       scripts=['clusto-template', 'clusto-get-from-pools'],
       install_requires=['jinja2', 'IPy'])
